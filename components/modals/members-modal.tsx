@@ -51,14 +51,34 @@ export const MembersModal = () => {
   const isModalOpen = isOpen && type === 'members'
   const { server } = data as { server: ServerWithMembersWithProfiles }
 
+  const onKick = async (memberId: string) => {
+    try {
+      setLoadingId(memberId)
+      const url = qs.stringifyUrl({
+        url: `/api/members/${memberId}`,
+        query: {
+          serverId: server.id
+        }
+      })
+
+      const response = await axios.delete(url)
+      router.refresh()
+      onOpen('members', { server: response.data })
+
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setLoadingId('')
+    }
+  }
+
   const onRoleChange = async (memberId: string, role: MemberRole) => {
     try {
       setLoadingId(memberId)
       const url = qs.stringifyUrl({
         url: `/api/members/${memberId}`,
         query: {
-          serverId: server?.id,
-          memberId
+          serverId: server?.id
         }
       })
 
@@ -107,14 +127,14 @@ export const MembersModal = () => {
                     <div className='ml-auto'>
                       <DropdownMenu>
                         <DropdownMenuTrigger>
-                          <MoreVertical className='h-4 w-4' />
+                          <MoreVertical className='h-4 w-4 text-zinc-500' />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent side='left'>
                           <DropdownMenuSub>
                             <DropdownMenuSubTrigger
                               className='flex items-center'
                             >
-                              <ShieldQuestion className='w-4 h-4 mt-2'/>
+                              <ShieldQuestion className='w-4 h-4 mr-2'/>
                               <span>Role</span>
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
@@ -134,7 +154,7 @@ export const MembersModal = () => {
                                   onClick={() => onRoleChange(member.id, 'MODERATOR')}
                                 >
                                   <ShieldCheck className='h-4 w-4 mr-2'/>
-                                  Guest
+                                  Moderator
                                   {
                                     member.role === 'MODERATOR' && (
                                       <Check className='h-4 w-4 ml-auto' />
@@ -145,7 +165,9 @@ export const MembersModal = () => {
                             </DropdownMenuPortal>
                           </DropdownMenuSub>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onKick(member.id)}
+                          >
                             <Gavel className='h-4 w-4 mr-2' />
                             Kick
                           </DropdownMenuItem>
